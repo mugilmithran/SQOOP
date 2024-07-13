@@ -1,0 +1,143 @@
+maria_dev
+
+su root
+default passsword = <password> 
+
+systemctl stop mysqld
+systemctl set-environment MYSQLD_OPTS="--skip-grant-tables --skip-networking"
+systemctl start mysqld
+mysql -u root
+
+------- Mysql cmd 
+FLUSH PRIVILEGES;
+alter user 'root'@'localhost' IDENTIFIED BY 'hadoop';
+FLUSH PRIVILEGES;
+QUIT;
+
+------ CMD
+systemctl unset-environment MYSQLD_OPTS
+systemctl restart mysqld
+
+-- next-- load the data to local---
+
+--launch Mysql and create table -command line
+use
+
+--SHOW Databases:
+SHOW DATABASES;
+
+
+---CREATE Table---if exists result error
+CREATE DATABASE <databasename>;
+
+USE <databasename>;
+
+
+--Create table
+CREATE TABLE logdatatable11(
+ time VARCHAR(255),
+  device VARCHAR(255),
+  ip VARCHAR(255),
+  request VARCHAR(255),
+  agent_name VARCHAR(255)
+)
+
+--LOAD DATA
+LOAD DATA LOCAL INFILE '/home/maria_dev/employee.csv' INTO TABLE employees FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' IGNORE 1 LINES (id,name,age,description);
+
+
+--Verify the data exisitance 
+SELECT count(*) from employees;
+
+
+----
+mysql -u root -p
+
+password: <password>
+
+
+---Grant access to tables :(database name * all table)
+GRANT ALL PRIVILEGES ON datatransfer.* to root@localhost IDENTIFIED BY 'hadoop';
+
+
+--Exit--from MYSQL
+EXIT;
+
+--exit from root account
+exit
+
+log in with maria_dev
+
+
+-- sqoop import(This has to run in maria_dev)
+JDBC connector, driver , mapper 
+
+databae-driver-table/mapper function one node=1 . user name for mysql//root pw : hadoop
+sqoop import --connect jdbc:mysql://localhost/datatransfer --driver com.mysql.jdbc.Driver --table employees -m 1 --username root --password <password> --hive-import
+
+
+-- log into Ambari-
+files view > user>maria_dev>logdatatable>select part-m-0000 >click open you can see the data
+
+
+sqoop import --connect jdbc:mysql://localhost/<databasename>datatransfer --driver com.mysql.jdbc.Driver --table <tablename>employee -m 1 --username root --password <password> --target-dir /user/<directory>maria_dev/<directory>employees_data
+
+Amabari>files view Hive> database> logtable> 
+SELECT * FROM logtable LIMIT 100;
+
+
+---you can import this hive simply typing --hive-import
+Hives view> using Ambari you can see the imported data 
+
+-files view >default hive directory apps > hive >warehouse
+
+
+mysql -u root -p
+
+password: hadoop
+
+
+USE logdata11;
+
+
+
+--Create table
+CREATE TABLE IF NOT EXISTS exported_logdatatable13(
+ time VARCHAR(255),
+  device VARCHAR(255),
+  ip VARCHAR(255),
+  request VARCHAR(255),
+  agent_name VARCHAR(255)
+);
+
+EXIT from my sql :
+EXIT;
+
+sqoop export --connect jdbc:mysql://localhost/datatransfer -m 1 --driver com.mysql.jdbc.Driver --table exported_employee --export-dir /user/<directory_name>maria_dev/<directory_name> --input-fields-terminated-by ',' --input-lines-terminated-by '\n' --username root --password <password>
+mysql -u root -p
+
+hadoop
+
+USE logdata11;
+
+SELECT * FROM exported_logdatatable12 LIMIT 10;
+
+--Importing column specific using --columns and conditions:
+
+sqoop import --connect jdbc:mysql://localhost/datatransfer --driver com.mysql.jdbc.Driver --table employees --columns "id, name, age" --where "age > 25" -m 1 --username root --password <password> --target-dir /user/<directory>maria_dev/<directory>employees_filtered
+
+--Incremental import:
+
+Add New Records to the table:
+ INSERT INTO employees (id, name, age, designation) VALUES (10001, 'Paul Walker', 40, 'Racer'), ('10002', 'Tom Cruise', 50, 'Actor')
+
+Incremental:
+sqoop import --connect jdbc:mysql://localhost/datatransfer --driver com.mysql.jdbc.Driver --table employees -m 1 --username root --password <password> --target-dir /user/maria_dev/employees --incremental append --check-column id --last-value <provide the value you want>100
+
+
+
+
+
+
+
+
